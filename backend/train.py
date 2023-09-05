@@ -348,6 +348,12 @@ def train_pdf(new_path):
                     return
                 else:
                     destination_folder = trained_path
+                    destination_file = os.path.join(
+                        destination_folder, os.path.basename(source_file)
+                    )
+                    if os.path.exists(destination_file):
+                        # If it exists, remove it
+                        os.remove(destination_file)
                     shutil.move(source_file, destination_folder)
 
             except Exception as e:
