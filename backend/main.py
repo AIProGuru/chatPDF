@@ -62,6 +62,8 @@ def find_in_pdf(query):
     print(ids)
     try:
         prompt = f"""
+                    You are a chatbot to assist users with your knowledge. You need to give detailed answer about various user queries.
+                    You are only a language model, so don't pretend to be human.
                     Use the next Context to generate answer about user query. If the Context has no relation to user query, you need to generate answer based on the knowledge that you know.
                     And don't mention about the given Context. It is just a reference.
                     Context: {inputSentence}
