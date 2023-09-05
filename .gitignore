@@ -1,0 +1,5 @@
+/backend/__pycache__
+/backend/settings.py
+/backend/trained/*
+/backend/uploads/*
+/backend/file_vec_info.json

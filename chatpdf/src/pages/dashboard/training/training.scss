@@ -1,0 +1,12 @@
+.training {
+  display: flex;
+  background-color: #eff2f6;
+  .trainingContainer {
+    flex: 30;
+  }
+  .training_content {
+    display: flex;
+    flex-direction: column;
+    padding: 50px;
+  }
+}
