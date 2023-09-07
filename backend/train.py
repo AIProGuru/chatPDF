@@ -12,6 +12,7 @@ from bs4 import BeautifulSoup
 import re
 import json
 from settings import *
+import docx
 
 
 client = MongoClient("mongodb://localhost:27017")
@@ -229,45 +230,6 @@ def mainTXT():
     for file_name in file_names:
         source_file = f"{new_path}/{file_name}"
         format = file_name.split(".")[-1]
-        if format == "txt":
-            with open(source_file, "r", encoding="utf-8") as f:
-                full_text = f.read()
-
-                # Split the full text into chunks of 1000 words with a 100-word overlap
-                chunk_size = 1000
-                overlap = 100
-                chunks = [
-                    full_text[i : i + chunk_size]
-                    for i in range(0, len(full_text), chunk_size - overlap)
-                ]
-                try:
-                    # Create embedding
-
-                    sentences, embedding, vec_indexs = get_embedding(chunks, file_name)
-
-                    print(len(sentences))
-                    if len(embedding) == 0:
-                        print(f"Creating embedding error in {source_file}")
-                    # meta = [{"sentence": line} for line in sentences[i]]
-                    # vector = list(zip(vec_indexs, embedding, meta))
-                    # print(vector)
-                    # inserting the embedding
-
-                    isCreatingEmbedding = upserting_to_pinecone(
-                        vec_indexs, embedding, sentences
-                    )
-                    if not isCreatingEmbedding:
-                        print("Inserting embedding error")
-                        return
-                    else:
-                        f.close()
-                        destination_folder = trained_path
-                        shutil.move(source_file, destination_folder)
-
-                except Exception as e:
-                    print("Embedding error:", str(e))
-                    raise e
-                    # print("Embedding error")
 
         if format == "csv":
             batch_size = 1000
@@ -304,62 +266,14 @@ def train_pdf(new_path):
                 print(
                     f"Parsing Error or invalid pdf, Please check the file {source_file}"
                 )
-            # print(content)
-            # Combine the content into a single string
+
             full_text = " ".join(content)
-
-            # Split the full text into chunks of 1000 words with a 100-word overlap
-            chunk_size = 1000
-            overlap = 100
-            chunks = [
-                full_text[i : i + chunk_size]
-                for i in range(0, len(full_text), chunk_size - overlap)
-            ]
-            try:
-                # Create embedding
-
-                sentences, embedding, vec_indexs = get_embedding(chunks, file_name)
-                output = "file_vec_info.json"
-                new_data = {"file_name": file_name, "vec_indexes": vec_indexs}
-                try:
-                    if os.path.exists(output):
-                        if os.path.getsize(output) > 0:
-                            with open(output, "r") as json_file:
-                                data = json.load(json_file)
-                except FileNotFoundError:
-                    data = []
-                data.append(new_data)
-                with open(output, "w") as json_file:
-                    json.dump(data, json_file, indent=4)
-                print(f"Data added and saved to {output}")
-                print(len(sentences))
-                if len(embedding) == 0:
-                    print(f"Creating embedding error in {source_file}")
-                # meta = [{"sentence": line} for line in sentences[i]]
-                # vector = list(zip(vec_indexs, embedding, meta))
-                # print(vector)
-                # inserting the embedding
-
-                isCreatingEmbedding = upserting_to_pinecone(
-                    vec_indexs, embedding, sentences
-                )
-                if not isCreatingEmbedding:
-                    print("Inserting embedding error")
-                    return
-                else:
-                    destination_folder = trained_path
-                    destination_file = os.path.join(
-                        destination_folder, os.path.basename(source_file)
-                    )
-                    if os.path.exists(destination_file):
-                        # If it exists, remove it
-                        os.remove(destination_file)
-                    shutil.move(source_file, destination_folder)
-
-            except Exception as e:
-                print("Embedding error:", str(e))
-                raise e
-                # print("Embedding error")
+        elif format == "txt":
+            with open(source_file, "r", encoding="utf-8") as f:
+                full_text = f.read()
+        elif format == "docx" or format == "doc":
+            doc = docx.Document(source_file)
+            full_text = "\n".join([paragraph.text for paragraph in doc.paragraphs])
 
         if format == "csv":
             batch_size = 1000
@@ -378,6 +292,53 @@ def train_pdf(new_path):
                             process_batch(batch, column_names)
             if len(batch) > 0:
                 process_batch(batch, column_names)
+
+        chunk_size = 1000
+        overlap = 100
+        chunks = [
+            full_text[i : i + chunk_size]
+            for i in range(0, len(full_text), chunk_size - overlap)
+        ]
+        print(chunks)
+        try:
+            sentences, embedding, vec_indexs = get_embedding(chunks, file_name)
+            if len(embedding) == 0:
+                print(f"Creating embedding error in {source_file}")
+
+            output = "file_vec_info.json"
+            new_data = {"file_name": file_name, "vec_indexes": vec_indexs}
+            try:
+                if os.path.exists(output):
+                    if os.path.getsize(output) > 0:
+                        with open(output, "r") as json_file:
+                            data = json.load(json_file)
+            except FileNotFoundError:
+                data = []
+            data.append(new_data)
+            with open(output, "w") as json_file:
+                json.dump(data, json_file, indent=4)
+            print(f"Data added and saved to {output}")
+            print(len(sentences))
+
+            isCreatingEmbedding = upserting_to_pinecone(
+                vec_indexs, embedding, sentences
+            )
+            if not isCreatingEmbedding:
+                print("Inserting embedding error")
+                return
+            else:
+                destination_folder = trained_path
+                destination_file = os.path.join(
+                    destination_folder, os.path.basename(source_file)
+                )
+                if os.path.exists(destination_file):
+                    # If it exists, remove it
+                    os.remove(destination_file)
+                shutil.move(source_file, destination_folder)
+
+        except Exception as e:
+            print("Embedding error:", str(e))
+            raise e
 
 
 def website(url):
