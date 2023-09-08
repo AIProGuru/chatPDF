@@ -259,6 +259,7 @@ def train_documents(new_path):
             r = sr.Recognizer()
             try:
                 with sr.AudioFile(source_file) as source:
+                    print(source)
                     audio = r.record(source)  # read the entire audio file
                 full_text = r.recognize_sphinx(audio)
             except sr.UnknownValueError as uv:
