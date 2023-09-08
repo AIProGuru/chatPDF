@@ -260,11 +260,13 @@ def train_documents(new_path):
             try:
                 with sr.AudioFile(source_file) as source:
                     audio = r.record(source)  # read the entire audio file
-                full_text = r.recognize_google(audio)
+                full_text = r.recognize_sphinx(audio)
             except sr.UnknownValueError as uv:
-                raise uv
+                print("Speech recognition could not understand the audio.")
+                return uv
             except sr.RequestError as e:
-                raise e
+                print(f"Could not request results; {e}")
+                return None
         chunk_size = 1000
         overlap = 100
         chunks = [
