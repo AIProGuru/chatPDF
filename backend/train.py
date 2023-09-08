@@ -258,6 +258,7 @@ def train_documents(new_path):
         elif format == "wav":
             r = sr.Recognizer()
             try:
+                print(source_file)
                 with sr.AudioFile(source_file) as source:
                     print(source)
                     audio = r.record(source)  # read the entire audio file
