@@ -5,9 +5,9 @@ import { environment } from "../../environment";
 const FileUploadMultiple = () => {
   const BASE_URL = environment.BASE_URL;
   const [files, setFiles] = useState([]);
+  const [isTraining, setIsTraining] = useState(false);
 
   const handleChange = (e) => {
-    // Use Array.from to convert the FileList object to an array
     const selectedFiles = Array.from(e.target.files);
     setFiles(selectedFiles);
   };
@@ -15,7 +15,6 @@ const FileUploadMultiple = () => {
   const handleUpload = async (e) => {
     e.preventDefault();
     const formData = new FormData();
-
     formData.append("length", files.length);
 
     files.forEach((file, index) => {
@@ -23,6 +22,7 @@ const FileUploadMultiple = () => {
     });
 
     try {
+      setIsTraining(true); // Set loading indicator to true
       const response = await axios.post(
         `${BASE_URL}/upload_documents/`,
         formData
@@ -34,6 +34,8 @@ const FileUploadMultiple = () => {
       console.log(response);
     } catch (error) {
       console.error(error);
+    } finally {
+      setIsTraining(false); // Set loading indicator back to false
     }
   };
 
@@ -44,12 +46,12 @@ const FileUploadMultiple = () => {
           <label className="custom-file-upload">
             Choose Files
             <i className="fa fa-upload"></i>
-            {/* Set the 'multiple' attribute to allow multiple file selection */}
             <input type="file" multiple onChange={handleChange} />
           </label>
           <button type="submit">Train</button>
         </form>
       </div>
+      {isTraining && <p>Training in progress...</p>}
     </div>
   );
 };
