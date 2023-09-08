@@ -3,3 +3,5 @@
 /backend/trained/*
 /backend/uploads/*
 /backend/file_vec_info.json
+/backend/database_operation/__pycache__
+/backend/database_operation/database/

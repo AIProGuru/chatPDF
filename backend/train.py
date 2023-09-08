@@ -13,7 +13,7 @@ import re
 import json
 from settings import *
 import docx
-
+from database_operation.save2db import *
 
 client = MongoClient("mongodb://localhost:27017")
 db = client["gabeo"]
@@ -220,37 +220,7 @@ def upserting_to_pinecone(vecs, embeddings, contents):
     return 1
 
 
-def mainTXT():
-    new_path = "new"  # source pdf folder that needs to be trained
-    trained_path = "trained"  # folder with pdf files already trained
-    # Get the list of file names in the folder
-    file_names = os.listdir(new_path)
-    # Repeat for the entire files
-
-    for file_name in file_names:
-        source_file = f"{new_path}/{file_name}"
-        format = file_name.split(".")[-1]
-
-        if format == "csv":
-            batch_size = 1000
-            batch = []
-            column_names = []
-
-            with open(source_file, "r") as file:
-                reader = csv.reader(file)
-                for i, row in enumerate(reader):
-                    if i == 0:
-                        column_names = row
-                        print(column_names)
-                    else:
-                        batch.append(row)
-                        if len(batch) >= batch_size:
-                            process_batch(batch, column_names)
-            if len(batch) > 0:
-                process_batch(batch, column_names)
-
-
-def train_pdf(new_path):
+def train_documents(new_path):
     trained_path = "trained"  # folder with pdf files already trained
     # Get the list of file names in the folder
     file_names = os.listdir(new_path)
@@ -260,38 +230,27 @@ def train_pdf(new_path):
         content = []
         source_file = f"{new_path}/{file_name}"
         format = file_name.split(".")[-1]
+        full_text = ""
         if format == "pdf":
-            content, flag = parse_pdf(source_file)
-            if not flag:
-                print(
-                    f"Parsing Error or invalid pdf, Please check the file {source_file}"
-                )
-
-            full_text = " ".join(content)
+            if is_text_based_pdf(source_file):
+                full_text = extract_text_from_pdf(source_file)
+            else:
+                full_text = extract_text_from_image_pdf(source_file)
         elif format == "txt":
             with open(source_file, "r", encoding="utf-8") as f:
                 full_text = f.read()
-        elif format == "docx" or format == "doc":
+        elif format == "docx":
             doc = docx.Document(source_file)
             full_text = "\n".join([paragraph.text for paragraph in doc.paragraphs])
 
-        if format == "csv":
-            batch_size = 1000
-            batch = []
-            column_names = []
-
-            with open(source_file, "r") as file:
-                reader = csv.reader(file)
-                for i, row in enumerate(reader):
-                    if i == 0:
-                        column_names = row
-                        print(column_names)
-                    else:
-                        batch.append(row)
-                        if len(batch) >= batch_size:
-                            process_batch(batch, column_names)
-            if len(batch) > 0:
-                process_batch(batch, column_names)
+        elif format == "csv":
+            import_csv(source_file)
+        elif format == "xlsx":
+            import_xlsx(source_file)
+        elif format == "xls":
+            import_xls(source_file)
+        elif format == "png" or format == "jpeg" or format == "jpg":
+            full_text = extract_text_from_image(source_file)
 
         chunk_size = 1000
         overlap = 100

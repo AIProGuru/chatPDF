@@ -14,7 +14,6 @@ import re
 import sqlite3
 from langchain.prompts.prompt import PromptTemplate
 import json
-from train import train_pdf
 from train import *
 
 import time
@@ -112,8 +111,8 @@ def remove_item_by_file_name(file_name, data):
         json.dump(updated_data, file, indent=4)
 
 
-@app.route("/upload_pdf/", methods=["POST", "GET"])
-def upload_pdf():
+@app.route("/upload_documents/", methods=["POST", "GET"])
+def upload_documents():
     if request.method == "POST":
         # Check if the POST request has a file part
         len = int(request.form["length"])
@@ -121,18 +120,20 @@ def upload_pdf():
             return "No file part"
 
         for i in range(len):
-            pdf_file = request.files[f"file-{i}"]
+            document_file = request.files[f"file-{i}"]
 
             # Ensure the uploads folder exists, create it if necessary
             if not os.path.exists(app.config["UPLOAD_FOLDER"]):
                 os.makedirs(app.config["UPLOAD_FOLDER"])
 
             # Save the uploaded PDF file to the uploads folder
-            pdf_file.save(os.path.join(app.config["UPLOAD_FOLDER"], pdf_file.filename))
+            document_file.save(
+                os.path.join(app.config["UPLOAD_FOLDER"], document_file.filename)
+            )
 
             # Optionally, you can perform further processing on the uploaded PDF file here
 
-        train_pdf(app.config["UPLOAD_FOLDER"])
+        train_documents(app.config["UPLOAD_FOLDER"])
 
         return {"status": "success"}
 

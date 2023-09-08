@@ -23,7 +23,10 @@ const FileUploadMultiple = () => {
     });
 
     try {
-      const response = await axios.post(`${BASE_URL}/upload_pdf/`, formData);
+      const response = await axios.post(
+        `${BASE_URL}/upload_documents/`,
+        formData
+      );
       console.log(response.status);
       if (response.status === 200) {
         alert("Training completed");
