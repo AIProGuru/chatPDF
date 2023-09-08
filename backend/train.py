@@ -14,6 +14,10 @@ import json
 from settings import *
 import docx
 from database_operation.save2db import *
+import speech_recognition as sr
+from os import path
+from pydub import AudioSegment
+
 
 client = MongoClient("mongodb://localhost:27017")
 db = client["gabeo"]
@@ -251,6 +255,11 @@ def train_documents(new_path):
             import_xls(source_file)
         elif format == "png" or format == "jpeg" or format == "jpg":
             full_text = extract_text_from_image(source_file)
+        elif format == "wav":
+            r = sr.Recognizer()
+            with sr.AudioFile(source_file) as source:
+                audio = r.record(source)  # read the entire audio file
+                full_text = r.recognize_google(audio)
 
         chunk_size = 1000
         overlap = 100
