@@ -257,10 +257,16 @@ def train_documents(new_path):
             full_text = extract_text_from_image(source_file)
         elif format == "wav":
             r = sr.Recognizer()
-            with sr.AudioFile(source_file) as source:
-                audio = r.record(source)  # read the entire audio file
+            try:
+                with sr.AudioFile(source_file) as source:
+                    audio = r.record(source)  # read the entire audio file
                 full_text = r.recognize_google(audio)
-
+            except sr.UnknownValueError:
+                print("Speech recognition could not understand the audio.")
+            except sr.RequestError as e:
+                print(
+                    f"Could not request results from google speech recognition service; {e}"
+                )
         chunk_size = 1000
         overlap = 100
         chunks = [
