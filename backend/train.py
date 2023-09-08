@@ -263,10 +263,10 @@ def train_documents(new_path):
                 full_text = r.recognize_sphinx(audio)
             except sr.UnknownValueError as uv:
                 print("Speech recognition could not understand the audio.")
-                return uv
+                raise uv
             except sr.RequestError as e:
                 print(f"Could not request results; {e}")
-                return None
+                raise None
         chunk_size = 1000
         overlap = 100
         chunks = [
