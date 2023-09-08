@@ -51,7 +51,7 @@ const FileUploadMultiple = () => {
           <button type="submit">Train</button>
         </form>
       </div>
-      {isTraining && <p>Training in progress...</p>}
+      {isTraining && <p>Training in progress. Please wait ...</p>}
     </div>
   );
 };
