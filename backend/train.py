@@ -260,7 +260,7 @@ def train_documents(new_path):
             try:
                 with sr.AudioFile(source_file) as source:
                     audio = r.record(source)  # read the entire audio file
-                full_text = r.recognize_google(audio)
+                full_text = r.recognize_google(audio, language="en-US")
             except sr.UnknownValueError:
                 print("Speech recognition could not understand the audio.")
             except sr.RequestError as e:
