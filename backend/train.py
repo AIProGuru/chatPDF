@@ -255,20 +255,16 @@ def train_documents(new_path):
             import_xls(source_file)
         elif format == "png" or format == "jpeg" or format == "jpg":
             full_text = extract_text_from_image(source_file)
+        elif (
+            format == "mp4"
+            or format == "mov"
+            or format == "avi"
+            or format == "wmv"
+            or format == "mp3"
+        ):
+            full_text = extract_text_from_media(source_file)
         elif format == "wav":
-            r = sr.Recognizer()
-            try:
-                print(source_file)
-                with sr.AudioFile(source_file) as source:
-                    print(source)
-                    audio = r.record(source)  # read the entire audio file
-                full_text = r.recognize_sphinx(audio)
-            except sr.UnknownValueError as uv:
-                print("Speech recognition could not understand the audio.")
-                raise uv
-            except sr.RequestError as e:
-                print(f"Could not request results; {e}")
-                raise None
+            full_text = transcribe_wav_to_text(source_file)
         chunk_size = 1000
         overlap = 100
         chunks = [

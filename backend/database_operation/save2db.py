@@ -7,6 +7,65 @@ import openpyxl  # for XLSX
 from PIL import Image
 import sqlite3
 import csv
+import moviepy.editor as mp
+import speech_recognition as sr
+from pydub import AudioSegment
+
+
+# Function to transcribe a WAV file to text
+def transcribe_wav_to_text(wav_file):
+    r = sr.Recognizer()
+    try:
+        with sr.AudioFile(wav_file) as source:
+            audio = r.record(source)  # read the entire audio file
+        full_text = r.recognize_google(audio)
+        return full_text
+    except sr.UnknownValueError as uv:
+        raise uv
+    except sr.RequestError as e:
+        raise e
+
+
+# Function to convert various media formats to WAV if needed
+def convert_media_to_wav(source_file, output_wav_file):
+    _, file_extension = os.path.splitext(source_file)
+    # Check if the source file is already in WAV format
+    if file_extension.lower() == ".wav":
+        # No conversion needed, just copy the source to the output file
+        os.rename(source_file, output_wav_file)
+    else:
+        # Convert the source file to WAV
+        if file_extension.lower() in (".mp4", ".avi", ".mov", ".wmv"):
+            video = mp.VideoFileClip(source_file)
+            audio_file = video.audio
+            audio_file.write_audiofile(output_wav_file)
+            # Close the video and audio objects to release resources
+            video.close()
+            audio_file.close()
+        elif file_extension.lower() == ".mp3":
+            sound = AudioSegment.from_mp3(source_file)
+            sound.export(output_wav_file, format="wav")
+            # Close the audio object to release resources
+            sound.close()
+        else:
+            raise ValueError("Unsupported file format")
+
+
+# Function to extract text from various media formats
+def extract_text_from_media(source_file):
+    # Define temporary WAV file path
+    temp_wav_file = "temp.wav"
+
+    # Convert the source file to WAV if needed
+    convert_media_to_wav(source_file, temp_wav_file)
+
+    # Transcribe the WAV file to text
+    text = transcribe_wav_to_text(temp_wav_file)
+
+    # Clean up the temporary WAV file
+    os.remove(temp_wav_file)
+
+    return text
 
 
 def extract_text_from_pdf(pdf_file):

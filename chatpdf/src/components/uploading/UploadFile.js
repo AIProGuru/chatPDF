@@ -48,12 +48,13 @@ const FileUploadMultiple = () => {
             <i className="fa fa-upload"></i>
             <input type="file" multiple onChange={handleChange} />
           </label>
-          <button type="submit">Train</button>
+          <button type="submit" disabled={isTraining}>
+            {isTraining ? "Training in progress..." : "Train"}
+          </button>
         </form>
       </div>
       {isTraining && <p>Training in progress. Please wait ...</p>}
     </div>
   );
 };
-
 export default FileUploadMultiple;
