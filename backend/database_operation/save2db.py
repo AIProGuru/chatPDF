@@ -145,9 +145,14 @@ def extract_text_from_image(img_file):
 
 
 def import_csv(csv_file):
+    # Extract the filename from the path
+    file_name = os.path.basename(csv_file)
+
     current_dir = os.path.dirname(__file__)
     db_file = os.path.join(current_dir, "database", "database.db")
-    table_name = split_filename(csv_file)  # Choose a table name for your CSV data
+
+    # Use the filename (without extension) as the table name
+    table_name = os.path.splitext(file_name)[0]
 
     conn = sqlite3.connect(db_file)
 
@@ -162,9 +167,10 @@ def import_csv(csv_file):
 
 
 def import_xlsx(xlsx_file):
+    file_name = os.path.basename(xlsx_file)
     current_dir = os.path.dirname(__file__)
     db_file = os.path.join(current_dir, "database", "database.db")
-    table_name = split_filename(xlsx_file)  # Choose a table name for your Excel data
+    table_name = os.path.splitext(file_name)[0]
 
     conn = sqlite3.connect(db_file)
 
