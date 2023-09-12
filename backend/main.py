@@ -46,8 +46,19 @@ def all_routes(text):
     return send_from_directory("../chatpdf/build", "index.html")
 
 
+previous_questions_and_answers = []
+
+
 def find_in_pdf(query):
     # queryResponse = query_embedding(query, "pdf")
+    new_question = query
+    errors = get_moderation(new_question)
+    if errors:
+        return {
+            "type": "generic",
+            "content": "Sorry, your question didn't pass the moderation check",
+        }
+
     queryResponse = query_pinecone(query)
 
     if not queryResponse:
@@ -60,21 +71,34 @@ def find_in_pdf(query):
     inputSentence = limit_string_tokens(inputSentence, 1000)
     print(ids)
     try:
+        # prompt = f"""
+        #             I want you to act as an accountant and come up with creative ways to manage finances.
+        #             You will need to consider budgeting, investment strategies and risk management when creating a financial plan for your client.
+        #             In some case, you may also need to provide advice on taxation laws and regulations in order to help them maximize their profits.
+        #             My first suggestion request is "Create a financial plan for a small business that focuses on cost savings and long-term investments"
+        #             You have to use User's language, so for example, if the user asks you something in Dutch, you need to answer in Dutch.
+        #             You are only a language model, so don't pretend to be a human.
+        #             Use the next Context to generate answer about user query. If the Context has no relation to user query, you need to generate answer based on the knowledge that you know.
+        #             And don't mention about the given Context. It is just a reference.
+        #             Context: {inputSentence}
+        #             query: {query}
+
+        # """
+
         prompt = f"""
-                    I want you to act as an accountant and come up with creative ways to manage finances.
-                    You will need to consider budgeting, investment strategies and risk management when creating a financial plan for your client.
-                    In some case, you may also need to provide advice on taxation laws and regulations in order to help them maximize their profits.
-                    My first suggestion request is "Create a financial plan for a small business that focuses on cost savings and long-term investments"
+                    Seeking guidance from experienced staff with expertise on financial markets, incorporating factors such as inflation rate or return estimates along with tracking stock prices over lengthy period ultimately helping customer understand sector then suggesting safest possible options available where he/she can allocate funds depending upon their requirement and interests!
+                    Starting query - "What currently is best way to invest money short term prospective?"
                     You have to use User's language, so for example, if the user asks you something in Dutch, you need to answer in Dutch.
-                    You are only a language model, so don't pretend to be a human.
+                    You are only a language model, and designed to assist investors so don't pretend to be a human.
                     Use the next Context to generate answer about user query. If the Context has no relation to user query, you need to generate answer based on the knowledge that you know.
                     And don't mention about the given Context. It is just a reference.
                     Context: {inputSentence}
                     query: {query}
 
         """
-
-        return {"type": "generic", "content": generate_text(OPENAI_KEY, prompt)}
+        response = get_response(prompt, previous_questions_and_answers, new_question)
+        previous_questions_and_answers.append((new_question, response))
+        return {"type": "generic", "content": response}
 
     except Exception as e:
         print(traceback.format_exc())
@@ -147,6 +171,71 @@ def chatPDF():
         query = request.form["query"]
         response = find_in_pdf(query)
         return response
+
+
+def get_moderation(question):
+    """
+    Check the question is safe to ask the model
+
+    Parameters:
+        question (str): The question to check
+
+    Returns a list of errors if the question is not safe, otherwise returns None
+    """
+
+    errors = {
+        "hate": "Content that expresses, incites, or promotes hate based on race, gender, ethnicity, religion, nationality, sexual orientation, disability status, or caste.",
+        "hate/threatening": "Hateful content that also includes violence or serious harm towards the targeted group.",
+        "self-harm": "Content that promotes, encourages, or depicts acts of self-harm, such as suicide, cutting, and eating disorders.",
+        "sexual": "Content meant to arouse sexual excitement, such as the description of sexual activity, or that promotes sexual services (excluding sex education and wellness).",
+        "sexual/minors": "Sexual content that includes an individual who is under 18 years old.",
+        "violence": "Content that promotes or glorifies violence or celebrates the suffering or humiliation of others.",
+        "violence/graphic": "Violent content that depicts death, violence, or serious physical injury in extreme graphic detail.",
+    }
+    response = openai.Moderation.create(input=question)
+    if response.results[0].flagged:
+        # get the categories that are flagged and generate a message
+        result = [
+            error
+            for category, error in errors.items()
+            if response.results[0].categories[category]
+        ]
+        return result
+    return None
+
+
+def get_response(instructions, previous_questions_and_answers, new_question):
+    """Get a response from ChatCompletion
+
+    Args:
+        instructions: The instructions for the chat bot - this determines how it will behave
+        previous_questions_and_answers: Chat history
+        new_question: The new question to ask the bot
+
+    Returns:
+        The response text
+    """
+    # build the messages
+    messages = [
+        {"role": "system", "content": instructions},
+    ]
+    # add the previous questions and answers
+    for question, answer in previous_questions_and_answers[-10:]:
+        messages.append({"role": "user", "content": question})
+        messages.append({"role": "assistant", "content": answer})
+    # add the new question
+    messages.append({"role": "user", "content": new_question})
+
+    completion = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=messages,
+        temperature=0.1,
+        max_tokens=1000,
+        top_p=1,
+        frequency_penalty=0,
+        presence_penalty=0.6,
+    )
+    return completion.choices[0].message.content
 
 
 def generate_text(openAI_key, prompt, engine="text-davinci-003"):
