@@ -96,6 +96,7 @@ def find_in_pdf(query):
                     QUERY: {query}
 
         """
+        print(inputSentence)
         response = get_response(prompt, previous_questions_and_answers, new_question)
         previous_questions_and_answers.append((new_question, response))
         return {"type": "generic", "content": response}
