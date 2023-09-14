@@ -89,13 +89,11 @@ def find_in_pdf(query):
                     Seeking guidance from experienced staff with expertise on financial markets, incorporating factors such as inflation rate or return estimates along with tracking stock prices over lengthy period ultimately helping customer understand sector then suggesting safest possible options available where he/she can allocate funds depending upon their requirement and interests!
                     Starting query - "What currently is best way to invest money short term prospective?"
                     You have to use User's language, so for example, if the user asks you something in Dutch, you need to answer in Dutch.
-                    User trains you by uploading document and ask question. Then you need to findout appropriate answer from the Context.
-                    The next context is from the data user uploaded before so please refer that to generate response about the user query.
-                    And if the query and Context has any relation, you must generate some valuable response, don't say like - I don't have access to specific documents - because user already uploaded the documents.
+                    You need to generate best answer about next QUERY in the next CONTEXT.
                     If the Context has no relation to user query, you need to answer like Sorry I don't have such information.
-                    And don't mention about the given Context. It is just a reference.
-                    Context: {inputSentence}
-                    query: {query}
+                    
+                    CONTEXT: {inputSentence}
+                    QUERY: {query}
 
         """
         response = get_response(prompt, previous_questions_and_answers, new_question)
