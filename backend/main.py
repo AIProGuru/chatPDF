@@ -85,15 +85,25 @@ def find_in_pdf(query):
 
         # """
 
+        # prompt = f"""
+        #             Seeking guidance from experienced staff with expertise on financial markets, incorporating factors such as inflation rate or return estimates along with tracking stock prices over lengthy period ultimately helping customer understand sector then suggesting safest possible options available where he/she can allocate funds depending upon their requirement and interests!
+        #             Starting query - "What currently is best way to invest money short term prospective?"
+        #             You have to use User's language, so for example, if the user asks you something in Dutch, you need to answer in Dutch.
+        #             You need to generate best answer about next QUERY in the next CONTEXT.
+        #             If the Context has no relation to user query, you need to answer like Sorry I don't have such information.
+
+        #             CONTEXT: {inputSentence}
+        #             QUERY: {query}
+
+        # """
         prompt = f"""
-                    Seeking guidance from experienced staff with expertise on financial markets, incorporating factors such as inflation rate or return estimates along with tracking stock prices over lengthy period ultimately helping customer understand sector then suggesting safest possible options available where he/she can allocate funds depending upon their requirement and interests!
-                    Starting query - "What currently is best way to invest money short term prospective?"
+                    You are a chatbot to assist users with your knowledge. You need to give detailed answer about various user queries.
                     You have to use User's language, so for example, if the user asks you something in Dutch, you need to answer in Dutch.
-                    You need to generate best answer about next QUERY in the next CONTEXT.
-                    If the Context has no relation to user query, you need to answer like Sorry I don't have such information.
-                    
-                    CONTEXT: {inputSentence}
-                    QUERY: {query}
+                    You are only a language model, so don't pretend to be a human.
+                    Use the next Context to generate answer about user query. If the Context has no relation to user query, you need to generate answer based on the knowledge that you know.
+                    And don't mention about the given Context. It is just a reference.
+                    Context: {inputSentence}
+                    query: {query}
 
         """
         print(inputSentence)
